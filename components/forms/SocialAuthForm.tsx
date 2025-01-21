@@ -39,7 +39,7 @@ const SocialAuthForm = () => {
           height={20}
           className="invert-colors mr-2.5object-contain"
         />
-        <span>Login with Github</span>
+        <span>Log in with Github</span>
       </Button>
 
       <Button className={buttonClass} onClick={() => handleSignIn("google")}>
@@ -50,7 +50,7 @@ const SocialAuthForm = () => {
           height={20}
           className="mr-2.5object-contain"
         />
-        <span>Login with Google</span>
+        <span>Log in with Google</span>
       </Button>
     </div>
   );
