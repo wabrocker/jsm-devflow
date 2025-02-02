@@ -5,6 +5,7 @@ import LocalSearch from "@/components/search/LocalSearch";
 import { Button } from "@/components/ui/button";
 import ROUTES from "@/constants/routes";
 import QuestionCard from "@/components/cards/QuestionCard";
+import handleError from "@/lib/handlers/error";
 
 const questions = [
   {
@@ -46,6 +47,13 @@ const questions = [
     createdAt: new Date(),
   },
 ];
+
+const test = async () => {
+  try {
+  } catch (error) {
+    handleError(error);
+  }
+};
 
 interface SearchParams {
   searchParams: Promise<{ [key: string]: string }>;
