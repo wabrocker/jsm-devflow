@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import ROUTES from "@/constants/routes";
 import QuestionCard from "@/components/cards/QuestionCard";
 import handleError from "@/lib/handlers/error";
+import dbConnect from "@/lib/mongoose";
 
 const questions = [
   {
@@ -50,8 +51,9 @@ const questions = [
 
 const test = async () => {
   try {
+    await dbConnect();
   } catch (error) {
-    handleError(error);
+    return handleError(error);
   }
 };
 
@@ -60,6 +62,7 @@ interface SearchParams {
 }
 
 const Home = async ({ searchParams }: SearchParams) => {
+  const result = await test();
   const { query = "", filter = "" } = await searchParams;
 
   const filteredQuestions = questions.filter((question) => {
