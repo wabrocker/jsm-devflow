@@ -7,7 +7,8 @@ import { Collection, Question } from "@/database";
 
 import action from "../handlers/action";
 import handleError from "../handlers/error";
-import { CollectionBaseSchema } from "../validations";
+import { CollectionBaseSchema, PaginatedSearchSchema } from "../validations";
+import { FilterQuery } from "mongoose";
 
 export async function toggleSaveQuestion(
   params: CollectionBaseParams
@@ -92,6 +93,76 @@ export async function hasSavedQuestion(
       data: {
         saved: !!collection,
       },
+    };
+  } catch (error) {
+    return handleError(error) as ErrorResponse;
+  }
+}
+
+export async function getSavedQuestions(
+  params: PaginatedSearchParams
+): Promise<ActionResponse<{ collection: Collection[]; isNext: boolean }>> {
+  const validationResult = await action({
+    params,
+    schema: PaginatedSearchSchema,
+  });
+
+  if (validationResult instanceof Error) {
+    return handleError(validationResult) as ErrorResponse;
+  }
+
+  const userId = validationResult.session?.user?.id;
+  const { page = 1, pageSize = 10, query, filter } = params;
+  const skip = (Number(page) - 1) * pageSize;
+  const limit = Number(pageSize);
+
+  const filterQuery: FilterQuery<typeof Collection> = { author: userId };
+
+  if (query) {
+    filterQuery.$or = [
+      { title: { $regex: new RegExp(query, "i") } },
+      { content: { $regex: new RegExp(query, "i") } },
+    ];
+  }
+
+  let sortCriteria = {};
+
+  switch (filter) {
+    case "mostrecent":
+      sortCriteria = { createdAt: -1 };
+      break;
+    case "oldest":
+      sortCriteria = { createdAt: -1 };
+      break;
+    case "mostvoted":
+      sortCriteria = { upvotes: -1 };
+    case "mostanswered":
+      sortCriteria = { answers: -1 };
+    default:
+      sortCriteria = { createdAt: -1 };
+      break;
+  }
+
+  try {
+    const totalQuestions = await Question.countDocuments(filterQuery);
+
+    const questions = await Collection.find(filterQuery)
+      .populate({
+        path: "question",
+        populate: [
+          { path: "tags", select: "_id name" },
+          { path: "author", select: "_id name image" },
+        ],
+      })
+      .sort(sortCriteria)
+      .skip(skip)
+      .limit(limit);
+
+    const isNext = totalQuestions > skip + questions.length;
+
+    return {
+      success: true,
+      data: { collection: JSON.parse(JSON.stringify(questions)), isNext },
     };
   } catch (error) {
     return handleError(error) as ErrorResponse;
